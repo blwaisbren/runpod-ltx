@@ -36,6 +36,7 @@ RUN git clone https://github.com/comfyanonymous/ComfyUI.git "${COMFYUI_DIR}" \
 #   ComfyUI-VideoHelperSuite  : LoadVideo / CreateVideo / SaveVideo (VHS_* nodes)
 #   comfyui_controlnet_aux    : CannyEdgePreprocessor + DWPreprocessor (pose) + DepthAnythingV2
 #   ComfyUI-Video-Depth-Anything : LoadVideoDepthAnythingModel + VideoDepthAnythingProcess
+#   ComfyUI_essentials        : SimpleMath+ and other utility nodes the LTX workflows use
 #   ComfyUI-Frame-Interpolation  : optional RIFE/FILM smoothing
 WORKDIR ${COMFYUI_DIR}/custom_nodes
 RUN git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
@@ -43,6 +44,7 @@ RUN git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
     git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
     git clone --depth 1 https://github.com/Fannovel16/comfyui_controlnet_aux.git && \
     git clone --depth 1 https://github.com/yuvraj108c/ComfyUI-Video-Depth-Anything.git && \
+    git clone --depth 1 https://github.com/cubiq/ComfyUI_essentials.git && \
     git clone --depth 1 https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git
 
 # Install each node's Python deps. Tolerant (|| true) so a single noisy node
@@ -54,6 +56,13 @@ RUN for d in */ ; do \
             pip install --no-cache-dir -r "${d}requirements.txt" || echo "WARN: deps for ${d} had issues"; \
         fi; \
     done
+
+# Pin kornia LAST so nothing overrides it. ComfyUI-LTXVideo lists kornia UNPINNED, which
+# resolves to 0.8.3 — that release removed symbols the pack imports
+# (pad / is_powerof_two / find_next_powerof_two from kornia.geometry.transform.pyramid),
+# making the ENTIRE LTXVideo pack fail to import (all IC-LoRA nodes silently missing).
+# 0.8.2 still exports them. Verified on the live pod.
+RUN pip install --no-cache-dir "kornia==0.8.2"
 
 # --- JupyterLab (optional file browser / terminal on :8888) ---
 RUN pip install --no-cache-dir jupyterlab

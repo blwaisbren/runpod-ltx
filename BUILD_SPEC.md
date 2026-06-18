@@ -73,8 +73,21 @@ Each IC-LoRA repo also has a `-diffusers` variant — **use `-comfyui` in ComfyU
 | `Kosinkadink/ComfyUI-VideoHelperSuite` | `VHS_*` LoadVideo / CreateVideo / SaveVideo |
 | `Fannovel16/comfyui_controlnet_aux` | `CannyEdgePreprocessor`, `DWPreprocessor` (pose), `DepthAnythingV2Preprocessor` |
 | `yuvraj108c/ComfyUI-Video-Depth-Anything` | `LoadVideoDepthAnythingModel`, `VideoDepthAnythingProcess` (depth branch of the 2.3 workflow) |
+| `cubiq/ComfyUI_essentials` | `SimpleMath+` and utility nodes the IC-LoRA workflows reference |
 | `Fannovel16/ComfyUI-Frame-Interpolation` | optional RIFE/FILM |
 | `ltdrdata/ComfyUI-Manager` | install/repair nodes from the UI |
+
+**⚠️ kornia pin (critical).** `ComfyUI-LTXVideo` lists `kornia` **unpinned**; it resolves to
+**0.8.3**, which removed `pad` / `is_powerof_two` / `find_next_powerof_two` from
+`kornia.geometry.transform.pyramid`. That ImportError makes the **entire LTXVideo pack fail to
+load** — every IC-LoRA node (`LTXICLoRALoaderModelOnly`, `LTXAddVideoICLoRAGuide`,
+`GemmaAPITextEncode`, `LTXVTiledVAEDecode`, …) silently disappears and all workflows show
+"missing nodes". Fix: pin **`kornia==0.8.2`** (installed last in the Dockerfile so nothing
+overrides it). Verified on the live pod: with 0.8.2 the pack imports and the Union Control
+(canny/depth), V2V, Motion-Track and Inpaint 2.3 workflows load with zero missing nodes.
+
+Two *exotic* 2.3 examples need extra packs (not installed by default): T2V two-stage advanced
+sampler needs `ClownSampler_Beta` (RES4LYF), and Outpaint needs `ImagePadForOutpaintTargetSize`.
 
 Example workflows confirmed in `ComfyUI-LTXVideo/example_workflows/2.3/`:
 `LTX-2.3_ICLoRA_Union_Control_Distilled.json` (canny+depth+pose),
