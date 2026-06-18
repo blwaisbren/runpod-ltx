@@ -1,0 +1,22 @@
+# Local smoke test on a machine with an NVIDIA GPU + nvidia-container-toolkit.
+#   docker compose up --build
+# Then open http://localhost:8188
+services:
+  comfyui-ltx:
+    build: .
+    image: comfyui-ltx:local
+    ports:
+      - "8188:8188"   # ComfyUI
+      - "8888:8888"   # JupyterLab
+    env_file:
+      - .env
+    volumes:
+      # Persists models + outputs locally, mirroring the RunPod Network Volume at /workspace
+      - ./workspace:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

@@ -1,0 +1,12 @@
+# Keep the build context tiny — only the Dockerfile + scripts are needed.
+.git
+.github
+*.md
+docs
+runpod
+workflows
+models
+output
+input
+.env
+.DS_Store

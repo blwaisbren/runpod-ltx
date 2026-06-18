@@ -1,0 +1,17 @@
+# Never commit model weights or runtime output
+models/
+output/
+input/
+*.safetensors
+*.ckpt
+*.pth
+*.gguf
+
+# Secrets / local env
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+*.swp
+__pycache__/
