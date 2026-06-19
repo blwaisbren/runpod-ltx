@@ -36,12 +36,17 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   `Sec-Fetch-Site: cross-site` or where `Origin != Host`. The RunPod proxy itself is **public/unauthenticated**
   (gated only by the unguessable Pod ID — `console.runpod.io` login is on `runpod.io`, a *different* registrable
   domain than `proxy.runpod.net`, so it's never even sent there). Proof: a clean `curl …/object_info` returns
-  **200**, but adding `-H 'Sec-Fetch-Site: cross-site'` returns **403**. **Why incognito worked & wiping all
-  Chrome data didn't:** it's a normal-profile **browser extension** (a wallet / Postman interceptor / VPN / CORS
-  or header-rewriter) that makes the navigation look cross-site → trips the 403. Incognito disables extensions;
-  a data-wipe doesn't remove them. **Fix (baked in):** start.sh now launches ComfyUI with `--enable-cors-header`
-  by default (`COMFY_ENABLE_CORS=true`), which swaps the origin check for the permissive CORS middleware →
-  normal-browser access works for everyone. Per-user alternative: disable the offending extension for the site.
+  **200**, but adding `-H 'Sec-Fetch-Site: cross-site'` returns **403** — and *only* that header flips it (none /
+  same-origin / Referer / Origin / Cookie all still return 200). **CONFIRMED trigger (2026-06-19):** the browser
+  sends `Sec-Fetch-Site: cross-site` only when you reach the pod by **clicking a link from another site — i.e.
+  the RunPod dashboard's "Connect → :8188" button** (`console.runpod.io` → `proxy.runpod.net` is cross-site).
+  Opening the URL by **typing/pasting it in the address bar, or from a bookmark, sends `Sec-Fetch-Site: none` →
+  200**; a reload sends `same-origin` → 200. NOT extensions (verified live: disabling ALL extensions did not
+  help) and NOT stored state (a full data-wipe didn't help) — incognito only "worked" because the URL gets
+  pasted there. **Per-user fix (no redeploy):** paste the URL in the address bar / use a bookmark; don't click
+  the dashboard Connect button. **Permanent fix (baked in):** start.sh now launches ComfyUI with
+  `--enable-cors-header` by default (`COMFY_ENABLE_CORS=true`), removing the origin check so even the dashboard
+  Connect button works.
 - **Diagnosing the pod:** RunPod Connect tab → enable **Web terminal**; or anonymously from anywhere:
   `curl https://<podid>-8188.proxy.runpod.net/object_info` (returns the live node list).
 - **WAS Node Suite deps (AnimateDiff add-on):** WAS's `requirements.txt` pulls `numba` (can silently
@@ -103,9 +108,14 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   terminal probe: clean `curl …/object_info` → **200** (pod healthy), but `-H 'Sec-Fetch-Site: cross-site'`
   → **403**, proving the 403 is **ComfyUI's `origin_only_middleware`**, not a RunPod auth cookie (the prior
   diagnosis was wrong — RunPod's proxy is public, and the console cookie is on a different registrable domain).
-  "Incognito works + data-wipe doesn't" ⇒ a normal-profile **browser extension** rewriting the navigation's
-  origin/headers (user has wallets, Postman, a VPN, ad/CORS extensions installed). **Fix:** start.sh now launches
-  ComfyUI with `--enable-cors-header` by default (env `COMFY_ENABLE_CORS`, default `true`), swapping the strict
-  origin check for the permissive CORS middleware so normal browsers load without 403. Corrected the gotcha +
-  closed the standing TODO above. **Redeploy note:** this is an image change → needs a GHCR rebuild + pod
-  redeploy to take effect (the running pod keeps 403'ing normal browsers until then; incognito still works now).
+  First guessed a normal-profile **browser extension** was tagging the nav cross-site — but the user disabled
+  ALL extensions and it still 403'd, **disproving that**. A curl matrix then nailed it: `Sec-Fetch-Site:
+  cross-site` is the *only* header that flips 200→403. **CONFIRMED root trigger: the user was opening the pod via
+  the RunPod dashboard's "Connect → :8188" button** — a `console.runpod.io` → `proxy.runpod.net` cross-site
+  navigation. **Verified live:** pasting the same URL into the address bar (→ `Sec-Fetch-Site: none`) loaded
+  ComfyUI in regular Chrome with all extensions ON. So incognito "worked" only because the URL was pasted there;
+  data-wipe/extension theories were both red herrings. **Permanent fix:** start.sh now launches ComfyUI with
+  `--enable-cors-header` by default (env `COMFY_ENABLE_CORS`, default `true`), removing the origin check so even
+  the dashboard Connect button works. Corrected the gotcha + closed the standing TODO above. **Redeploy note:**
+  this is an image change → needs a GHCR rebuild + pod redeploy to take effect; until then, the address-bar /
+  bookmark workaround fully unblocks normal-browser use (no redeploy required).
