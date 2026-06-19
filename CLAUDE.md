@@ -80,3 +80,10 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   surfaced it in the sidebar via start.sh, and documented everything (BUILD_SPEC §8–9, README, TEMPLATE,
   workflows/README). Pushed (commit `18ca961`) → GHCR build succeeded → redeployed → **verified live on the
   pod: the workflow loads with 0 missing nodes and renders+upscales+interpolates end-to-end.** Done.
+- **2026-06-19 (later):** Swapped the workflow's depth ControlNet from the 5.7 GB legacy `control_sd15_depth.pth`
+  → the 723 MB `control_v11f1p_sd15_depth_fp16.safetensors` (verified in comfyanonymous fp16 repo). Repointed
+  node 78 + added it to the default `ANIM_OPTIONAL_MODELS` download set so it's present on every pod; demoted
+  `ANIM_DEPTH_CONTROLNET` to a legacy-only opt-in. Committed (`a5dd876`) + pushed → GHCR rebuild. **Note on the
+  cp -n gotcha:** start.sh copies the bundled workflow with `cp -rn`, so a volume that already has the old
+  `AnimateDiff-examples/` copy keeps it on redeploy — delete that folder once (or re-pick node 78) to pick up
+  the fp16-pointing JSON; the model itself downloads automatically regardless.
