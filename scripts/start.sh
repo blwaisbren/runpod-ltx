@@ -74,4 +74,19 @@ cd "$COMFYUI_DIR"
 echo "==> Starting ComfyUI on :8188"
 echo "    Open it at: https://<POD_ID>-8188.proxy.runpod.net"
 # COMFY_EXTRA_ARGS examples: --lowvram | --reserve-vram 2 | --fast | --use-sage-attention
-exec python main.py --listen 0.0.0.0 --port 8188 ${COMFY_EXTRA_ARGS:-}
+#
+# --enable-cors-header (default ON): disables ComfyUI's built-in origin_only_middleware,
+# which otherwise returns HTTP 403 ("Access denied") for any request the browser tags as
+# cross-site (Sec-Fetch-Site: cross-site) or whose Origin != Host. That CSRF check — NOT
+# any RunPod auth cookie — is what makes the pod load in incognito (no extensions) yet 403
+# in a normal Chrome profile, where an extension rewrites the navigation's origin/headers.
+# Relaxing it makes normal-browser access work regardless of extensions. Trade-off: the
+# bare flag allows any origin (*) to call the ComfyUI API; acceptable for a personal pod
+# already gated only by an unguessable Pod ID. Set COMFY_ENABLE_CORS=false to restore the
+# stricter (incognito-only) default.
+CORS_ARG=""
+if [ "${COMFY_ENABLE_CORS:-true}" = "true" ]; then
+    CORS_ARG="--enable-cors-header"
+    echo "==> CORS/origin check relaxed (--enable-cors-header): normal-browser access enabled"
+fi
+exec python main.py --listen 0.0.0.0 --port 8188 ${CORS_ARG} ${COMFY_EXTRA_ARGS:-}

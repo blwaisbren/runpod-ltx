@@ -31,9 +31,17 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   `pad`/`is_powerof_two`/`find_next_powerof_two` from `kornia.geometry.transform.pyramid` → the WHOLE
   LTXVideo pack fails to import → all IC-LoRA nodes silently missing → every workflow shows "missing nodes".
   Dockerfile pins **`kornia==0.8.2`** (installed LAST) + adds `cubiq/ComfyUI_essentials` (SimpleMath+).
-- **RunPod proxy 403 in browser:** `*-8188.proxy.runpod.net` gates on a per-subdomain auth cookie; hitting it
-  before the service is ready caches a 403. Fix: incognito, or clear that subdomain's site-data. (Normal-browser
-  access still TODO.)
+- **Browser 403 = ComfyUI CSRF, NOT a RunPod cookie (corrected 2026-06-19):** the "Access denied / HTTP 403"
+  page is **ComfyUI's own `origin_only_middleware`** (server.py) rejecting requests the browser tags
+  `Sec-Fetch-Site: cross-site` or where `Origin != Host`. The RunPod proxy itself is **public/unauthenticated**
+  (gated only by the unguessable Pod ID — `console.runpod.io` login is on `runpod.io`, a *different* registrable
+  domain than `proxy.runpod.net`, so it's never even sent there). Proof: a clean `curl …/object_info` returns
+  **200**, but adding `-H 'Sec-Fetch-Site: cross-site'` returns **403**. **Why incognito worked & wiping all
+  Chrome data didn't:** it's a normal-profile **browser extension** (a wallet / Postman interceptor / VPN / CORS
+  or header-rewriter) that makes the navigation look cross-site → trips the 403. Incognito disables extensions;
+  a data-wipe doesn't remove them. **Fix (baked in):** start.sh now launches ComfyUI with `--enable-cors-header`
+  by default (`COMFY_ENABLE_CORS=true`), which swaps the origin check for the permissive CORS middleware →
+  normal-browser access works for everyone. Per-user alternative: disable the offending extension for the site.
 - **Diagnosing the pod:** RunPod Connect tab → enable **Web terminal**; or anonymously from anywhere:
   `curl https://<podid>-8188.proxy.runpod.net/object_info` (returns the live node list).
 - **WAS Node Suite deps (AnimateDiff add-on):** WAS's `requirements.txt` pulls `numba` (can silently
@@ -59,7 +67,10 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   AnimateDiff workflow now run from the one image. **Follow-up (2026-06-19):** swapped the depth ControlNet to
   the 723 MB fp16 model (default-on) and repointed the workflow's depth node to it — pushed for rebuild.
   (Remaining opt-in untested live: `CIVITAI_TOKEN` bubblingRings LoRA — backs a bypassed node.)
-- ⬜ Normal-browser (non-incognito) proxy access — clear cookie / proper login handshake.
+- ✅ **Normal-browser (non-incognito) proxy access (fixed 2026-06-19).** Root cause was misdiagnosed as a
+  "stale auth cookie"; it's actually ComfyUI's `origin_only_middleware` 403 (see gotcha above). start.sh now
+  passes `--enable-cors-header` by default — verify live after the next redeploy that a normal Chrome profile
+  loads the pod without 403.
 - ⬜ Optional: add `RES4LYF` (`ClownSampler_Beta`) + an `ImagePadForOutpaintTargetSize` provider to make the
   T2V-two-stage and Outpaint examples turnkey too (not needed for canny/depth).
 - 🗓️ Built for a lecture ~July 2026 — tear down `ltx-volume` afterward to stop the ~$10/mo storage charge.
@@ -87,3 +98,14 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   cp -n gotcha:** start.sh copies the bundled workflow with `cp -rn`, so a volume that already has the old
   `AnimateDiff-examples/` copy keeps it on redeploy — delete that folder once (or re-pick node 78) to pick up
   the fp16-pointing JSON; the model itself downloads automatically regardless.
+- **2026-06-19 (browser 403 fix):** User reported the pod's ComfyUI would only open in incognito — a normal
+  Chrome profile 403'd even after wiping **all** Chrome data. Investigated live with the Chrome MCP + a
+  terminal probe: clean `curl …/object_info` → **200** (pod healthy), but `-H 'Sec-Fetch-Site: cross-site'`
+  → **403**, proving the 403 is **ComfyUI's `origin_only_middleware`**, not a RunPod auth cookie (the prior
+  diagnosis was wrong — RunPod's proxy is public, and the console cookie is on a different registrable domain).
+  "Incognito works + data-wipe doesn't" ⇒ a normal-profile **browser extension** rewriting the navigation's
+  origin/headers (user has wallets, Postman, a VPN, ad/CORS extensions installed). **Fix:** start.sh now launches
+  ComfyUI with `--enable-cors-header` by default (env `COMFY_ENABLE_CORS`, default `true`), swapping the strict
+  origin check for the permissive CORS middleware so normal browsers load without 403. Corrected the gotcha +
+  closed the standing TODO above. **Redeploy note:** this is an image change → needs a GHCR rebuild + pod
+  redeploy to take effect (the running pod keeps 403'ing normal browsers until then; incognito still works now).
