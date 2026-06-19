@@ -50,11 +50,12 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
 ## Status / TODO
 - ✅ Deployed and verified end-to-end. Union Control (canny/depth), V2V, Motion-Track, Inpaint 2.3 workflows
   load with zero missing nodes after the kornia fix.
-- 🔧 **AnimateDiff add-on built (2026-06-19) but NOT yet deployed/verified on a pod.** Code is in `main`
-  (Dockerfile + provisioning + start.sh + bundled workflow). Next: push → GHCR rebuild → redeploy the
-  `comfyui-ltx23` template (same volume) → open `AnimateDiff-examples/cool2-...json` and confirm 0 missing
-  nodes + all active dropdowns populate. The existing template env (`MODEL_PRESET=ltx23`) auto-installs the
-  add-on (default-on); models land on the same `ltx-volume` (+~8 GB active, +~4.5 GB optional).
+- ✅ **AnimateDiff add-on deployed & verified end-to-end (2026-06-19).** Pushed → GHCR built clean →
+  redeployed `comfyui-ltx23` (same `ltx-volume`, `MODEL_PRESET=ltx23` auto-installs the add-on). On the pod,
+  `AnimateDiff-examples/cool2-...json` loads with **0 missing nodes** (89 nodes) and renders end-to-end:
+  AnimateDiff → Ultimate SD Upscale → FILM interpolation all produced output. Both LTX-2.3 and the SD1.5/
+  AnimateDiff workflow now run from the one image. (Opt-ins still untested live: `CIVITAI_TOKEN` bubblingRings
+  LoRA + `ANIM_DEPTH_CONTROLNET` depth CN — both back bypassed nodes so not on the default path.)
 - ⬜ Normal-browser (non-incognito) proxy access — clear cookie / proper login handshake.
 - ⬜ Optional: add `RES4LYF` (`ClownSampler_Beta`) + an `ImagePadForOutpaintTargetSize` provider to make the
   T2V-two-stage and Outpaint examples turnkey too (not needed for canny/depth).
@@ -74,4 +75,5 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   an additive `provision_animatediff` block (default-on, with `ANIM_OPTIONAL_MODELS`/`ANIM_DEPTH_CONTROLNET`/
   `CIVITAI_TOKEN` flags + Civitai-token support in `dl()`), bundled the workflow JSON into the image and
   surfaced it in the sidebar via start.sh, and documented everything (BUILD_SPEC §8–9, README, TEMPLATE,
-  workflows/README). **Not yet pushed/deployed** — left for the user to trigger the GHCR rebuild.
+  workflows/README). Pushed (commit `18ca961`) → GHCR build succeeded → redeployed → **verified live on the
+  pod: the workflow loads with 0 missing nodes and renders+upscales+interpolates end-to-end.** Done.
