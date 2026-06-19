@@ -72,10 +72,12 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   AnimateDiff workflow now run from the one image. **Follow-up (2026-06-19):** swapped the depth ControlNet to
   the 723 MB fp16 model (default-on) and repointed the workflow's depth node to it — pushed for rebuild.
   (Remaining opt-in untested live: `CIVITAI_TOKEN` bubblingRings LoRA — backs a bypassed node.)
-- ✅ **Normal-browser (non-incognito) proxy access (fixed 2026-06-19).** Root cause was misdiagnosed as a
-  "stale auth cookie"; it's actually ComfyUI's `origin_only_middleware` 403 (see gotcha above). start.sh now
-  passes `--enable-cors-header` by default — verify live after the next redeploy that a normal Chrome profile
-  loads the pod without 403.
+- ✅ **Normal-browser (non-incognito) proxy access — FIXED & VERIFIED LIVE (2026-06-19).** Root cause was
+  misdiagnosed as a "stale auth cookie"; it's actually ComfyUI's `origin_only_middleware` 403 on cross-site
+  navigations, i.e. clicking the RunPod dashboard "Connect → ComfyUI" button (see gotcha above). start.sh now
+  passes `--enable-cors-header` by default. GHCR build succeeded; user deployed a **fresh** pod from the
+  template (a Stop→Start reuses the cached old image, so a fresh deploy is required) and confirmed the
+  dashboard ComfyUI link now opens in normal Chrome with all extensions on — no incognito, no workaround.
 - ⬜ Optional: add `RES4LYF` (`ClownSampler_Beta`) + an `ImagePadForOutpaintTargetSize` provider to make the
   T2V-two-stage and Outpaint examples turnkey too (not needed for canny/depth).
 - 🗓️ Built for a lecture ~July 2026 — tear down `ltx-volume` afterward to stop the ~$10/mo storage charge.
@@ -118,4 +120,9 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   `--enable-cors-header` by default (env `COMFY_ENABLE_CORS`, default `true`), removing the origin check so even
   the dashboard Connect button works. Corrected the gotcha + closed the standing TODO above. **Redeploy note:**
   this is an image change → needs a GHCR rebuild + pod redeploy to take effect; until then, the address-bar /
-  bookmark workaround fully unblocks normal-browser use (no redeploy required).
+  bookmark workaround fully unblocks normal-browser use (no redeploy required). **Confirmed by comparison: a 2nd
+  pod on a stock ComfyUI template returns 200 to a `Sec-Fetch-Site: cross-site` request where this template
+  returned 403 — i.e. stock images already ship the relaxed check.** **✅ Verified end state:** GHCR build
+  succeeded → user deployed a fresh pod from the template → the dashboard "ComfyUI" link now opens in normal
+  Chrome (extensions on, no incognito). Done. (Reminder baked into the gotcha: Stop→Start reuses the cached old
+  image; only a fresh deploy picks up image changes.)
