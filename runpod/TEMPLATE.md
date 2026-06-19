@@ -44,13 +44,20 @@ then deploy a Pod from the template onto the volume.
 |---|---|
 | `MODEL_PRESET` | `ltx23` |
 | `GEMMA_VARIANT` | `fp8_scaled` |
+| `INSTALL_ANIMATEDIFF` | `true` _(downloads the SD1.5/AnimateDiff model set alongside LTX)_ |
+| `ANIM_OPTIONAL_MODELS` | `true` _(stage the bypassed control branches; `false` to skip ~4.5 GB)_ |
+| `ANIM_DEPTH_CONTROLNET` | _(optional — `true` to fetch the heavy 5.7 GB legacy depth CN)_ |
+| `CIVITAI_TOKEN` | _(optional — only for the bubblingRings Civitai motion LoRA)_ |
 | `ENABLE_JUPYTER` | `true` |
 | `JUPYTER_TOKEN` | _(set a password if you'll expose 8888)_ |
 | `COMFY_EXTRA_ARGS` | _(optional, e.g. `--reserve-vram 2`)_ |
 | `HF_TOKEN` | _(optional — not needed for the default preset)_ |
 
-> For the cheap 24 GB path instead: set `MODEL_PRESET=ltx097`, attach a ~40 GB volume, and a
-> 4090 is plenty.
+> **Want LTX only?** Set `INSTALL_ANIMATEDIFF=false`. **AnimateDiff only?** Set
+> `MODEL_PRESET=none` (skips the ~68 GB LTX set; the ~8 GB AnimateDiff set still installs).
+>
+> For the cheap 24 GB path instead: set `MODEL_PRESET=ltx097`, attach a ~40 GB volume (or
+> ~55 GB with the AnimateDiff add-on), and a 4090 is plenty.
 
 ---
 

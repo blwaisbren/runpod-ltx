@@ -52,6 +52,15 @@ if [ -d "$WF_SRC" ]; then
     echo "==> LTX example workflows copied to the ComfyUI Workflows sidebar"
 fi
 
+# --- Surface the bundled SD1.5 / AnimateDiff workflow too ---
+WF_ANIM_SRC="/workflows_bundled/animatediff"
+WF_ANIM_DST="$COMFYUI_DIR/user/default/workflows/AnimateDiff-examples"
+if [ -d "$WF_ANIM_SRC" ]; then
+    mkdir -p "$WF_ANIM_DST"
+    cp -rn "$WF_ANIM_SRC/." "$WF_ANIM_DST/" 2>/dev/null || true
+    echo "==> AnimateDiff example workflow copied to the ComfyUI Workflows sidebar"
+fi
+
 # --- Optional JupyterLab on :8888 ---
 if [ "${ENABLE_JUPYTER:-true}" = "true" ]; then
     echo "==> Starting JupyterLab on :8888 (token='${JUPYTER_TOKEN:-<empty>}')"

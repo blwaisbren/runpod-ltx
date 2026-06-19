@@ -22,6 +22,11 @@ the models are already there.
   Video-Depth-Anything, Frame-Interpolation, Manager).
 - A model **provisioning script** that downloads exactly the right, **link-verified** files
   for your chosen preset.
+- **Bonus, in the same pod:** a legacy **SD1.5 / AnimateDiff** video workflow
+  (`AnimateDiff-examples/cool2-with-upscale-and-interp.json`) with its full node + model set —
+  AnimateLCM, IPAdapter, ControlNet stack, Ultimate SD Upscale, ESRGAN upscalers and FILM
+  interpolation — all baked in and provisioned by default. See
+  [the AnimateDiff section in workflows/README.md](workflows/README.md#sd15--animatediff-workflow-cool2).
 
 ## The two model presets
 
@@ -38,6 +43,17 @@ Set `MODEL_PRESET` as a template env var.
 > separate canny/depth files. The older **0.9.7** line is the only one with truly *separate*
 > canny and depth LoRAs — that's why it's the `ltx097` fallback. Full reasoning + every
 > verified link is in [BUILD_SPEC.md](BUILD_SPEC.md).
+
+## Also included: the SD1.5 / AnimateDiff workflow
+
+The same image **also** runs a classic **SD1.5 + AnimateDiff** video pipeline (the
+`cool2-with-upscale-and-interp` workflow): AnimateLCM motion + LCM checkpoint, IPAdapter style
+transfer, a multi-ControlNet stack (lineart enabled; openpose / softedge / depth / AnimateDiff
+CN staged but bypassed), an Ultimate-SD-Upscale + ESRGAN highres pass, and FILM frame
+interpolation. Its 10 extra custom-node packs are baked in, and its ~8 GB active model set
+(plus ~5 GB of optional bypassed-branch models) is provisioned **alongside** the LTX models by
+default — so one pod serves both. Toggle it with `INSTALL_ANIMATEDIFF` (see env table). Usage:
+[workflows/README.md → AnimateDiff](workflows/README.md#sd15--animatediff-workflow-cool2).
 
 ---
 
@@ -96,9 +112,13 @@ Full per-mode notes: [`workflows/README.md`](workflows/README.md).
 
 | Var | Default | Purpose |
 |---|---|---|
-| `MODEL_PRESET` | `ltx23` | `ltx23` or `ltx097` — which model set to download |
+| `MODEL_PRESET` | `ltx23` | `ltx23` / `ltx097` — LTX set to download (`none` = skip LTX, AnimateDiff only) |
 | `GEMMA_VARIANT` | `fp8_scaled` | `ltx23` encoder precision: `full` / `fpmixed` / `fp8_scaled` / `fp4_mixed` |
 | `LTX097_UPSCALERS` | `false` | `ltx097`: also fetch the 0.9.7 spatial/temporal upscalers |
+| `INSTALL_ANIMATEDIFF` | `true` | Download the SD1.5/AnimateDiff model set (additive to the LTX preset) |
+| `ANIM_OPTIONAL_MODELS` | `true` | Also stage the **bypassed** control branches (openpose/softedge/etc.) |
+| `ANIM_DEPTH_CONTROLNET` | `false` | Fetch the heavy 5.7 GB legacy `control_sd15_depth.pth` |
+| `CIVITAI_TOKEN` | _(empty)_ | Needed only for the `bubblingRings` Civitai motion LoRA |
 | `SKIP_PROVISIONING` | `false` | `true` = don't download models (you'll manage them yourself) |
 | `ENABLE_JUPYTER` | `true` | Start JupyterLab on `:8888` |
 | `JUPYTER_TOKEN` | _(empty)_ | Token to protect JupyterLab (recommended if exposed) |
@@ -134,7 +154,9 @@ and lower resolution / `GEMMA_VARIANT` if you OOM.
 │   └── provisioning.sh            # downloads the verified model set per preset
 ├── .github/workflows/build-push.yml   # CI → GHCR (Docker Hub alt included)
 ├── runpod/TEMPLATE.md             # exact RunPod template + pod field values
-├── workflows/README.md            # which workflow to load; canny vs depth notes
+├── workflows/
+│   ├── README.md                  # which workflow to load; LTX canny/depth + AnimateDiff notes
+│   └── animatediff/               # the SD1.5/AnimateDiff workflow JSON (baked into the image)
 ├── BUILD_SPEC.md                  # verified research: every model, link, decision, risk
 └── .env.example                   # copy to .env for local docker-compose testing
 ```

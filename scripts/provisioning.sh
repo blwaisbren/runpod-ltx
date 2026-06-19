@@ -7,10 +7,14 @@
 # ComfyUI-Manager. Re-run any time with:  bash /provisioning.sh
 #
 # Env:
-#   MODEL_PRESET    ltx23 (default) | ltx097
-#   GEMMA_VARIANT   fp8_scaled (default) | full | fpmixed | fp4_mixed   [ltx23 only]
-#   LTX097_UPSCALERS  true|false (default false)                        [ltx097 only]
-#   HF_TOKEN        optional — only needed if a repo is gated / for higher rate limits
+#   MODEL_PRESET     ltx23 (default) | ltx097 | none|animatediff (skip the LTX set)
+#   GEMMA_VARIANT    fp8_scaled (default) | full | fpmixed | fp4_mixed    [ltx23 only]
+#   LTX097_UPSCALERS true|false (default false)                          [ltx097 only]
+#   INSTALL_ANIMATEDIFF   true (default) | false — the SD1.5/AnimateDiff model set (additive)
+#   ANIM_OPTIONAL_MODELS  true (default) | false — also stage the BYPASSED control branches
+#   ANIM_DEPTH_CONTROLNET false (default) | true — the heavy 5.7 GB legacy control_sd15_depth.pth
+#   CIVITAI_TOKEN    optional — needed only for the bubblingRings Civitai motion LoRA
+#   HF_TOKEN         optional — only needed if a repo is gated / for higher rate limits
 set -uo pipefail
 
 COMFYUI_DIR="${COMFYUI_DIR:-/ComfyUI}"
@@ -19,7 +23,7 @@ PRESET="${MODEL_PRESET:-ltx23}"
 GEMMA_VARIANT="${GEMMA_VARIANT:-fp8_scaled}"
 HF="https://huggingface.co"
 
-mkdir -p "$MODELS"/{checkpoints,diffusion_models,loras,text_encoders,vae,latent_upscale_models,upscale_models}
+mkdir -p "$MODELS"/{checkpoints,diffusion_models,loras,text_encoders,vae,latent_upscale_models,upscale_models,controlnet,clip_vision,ipadapter,animatediff_models,animatediff_motion_lora}
 
 # dl <url> <dest_path> — resumable, parallel when aria2c is present, skips if present.
 dl () {
@@ -27,6 +31,10 @@ dl () {
     if [ -s "$dest" ]; then
         echo "  ✓ present: $(basename "$dest")"
         return 0
+    fi
+    # Civitai download endpoints are token-gated — append the API token as a query param.
+    if [[ "$url" == *civitai.com* ]] && [ -n "${CIVITAI_TOKEN:-}" ]; then
+        if [[ "$url" == *\?* ]]; then url="${url}&token=${CIVITAI_TOKEN}"; else url="${url}?token=${CIVITAI_TOKEN}"; fi
     fi
     echo "  ↓ downloading: $(basename "$dest")"
     mkdir -p "$(dirname "$dest")"
@@ -49,6 +57,67 @@ dl () {
     echo "    !! FAILED: $url"
     rm -f "$dest"
     return 1
+}
+
+# Models for the legacy SD1.5 / AnimateDiff workflow (workflows/animatediff/cool2-...json).
+# Filenames here MATCH the names baked into that workflow so every loader dropdown resolves.
+# A few HF source files have different names than the workflow expects — dl() saves under the
+# DEST basename, so passing the source URL + the target path renames them on download.
+provision_animatediff () {
+    echo "==> AnimateDiff/SD1.5 add-on — models for the 'cool2 upscale+interp' workflow"
+    local CN="$MODELS/controlnet" CK="$MODELS/checkpoints" LO="$MODELS/loras"
+    local AM="$MODELS/animatediff_models" AML="$MODELS/animatediff_motion_lora"
+    local CV="$MODELS/clip_vision" IP="$MODELS/ipadapter" UP="$MODELS/upscale_models"
+
+    # --- ACTIVE path (what the workflow runs on Queue) ---
+    dl "$HF/moonshotmillion/Photon_LCM_1.5/resolve/main/photonLCM_v10.safetensors" \
+       "$CK/photonLCM_v10.safetensors"                                    # SD1.5 LCM checkpoint (Baked VAE)
+    dl "$HF/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors" \
+       "$LO/lcm-lora-sdv1-5.safetensors"                                  # rename: pytorch_lora_weights -> lcm-lora
+    dl "$HF/wangfuyun/AnimateLCM/resolve/main/AnimateLCM_sd15_t2v.ckpt" \
+       "$AM/sd15_t2v_beta.ckpt"                                           # rename: AnimateLCM motion module
+    dl "$HF/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_lineart_fp16.safetensors" \
+       "$CN/control_v11p_sd15_lineart_fp16.safetensors"                   # the ENABLED control branch (lineart)
+    dl "$HF/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors" \
+       "$CV/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"                  # rename: IPAdapter CLIP-Vision (ViT-H)
+    dl "$HF/h94/IP-Adapter/resolve/main/models/ip-adapter-plus_sd15.safetensors" \
+       "$IP/ip-adapter-plus_sd15.safetensors"
+    dl "$HF/gemasai/4x_RealisticRescaler_100000_G/resolve/main/4x_RealisticRescaler_100000_G.pth" \
+       "$UP/4x_RealisticRescaler_100000_G.pth"                            # WAS Upscale Model Loader (active)
+
+    # --- OPTIONAL: models for the BYPASSED control/highres branches (so dropdowns resolve;
+    #     enable the branch in the UI to use them). Skip with ANIM_OPTIONAL_MODELS=false. ---
+    if [ "${ANIM_OPTIONAL_MODELS:-true}" = "true" ]; then
+        dl "$HF/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_softedge_fp16.safetensors" \
+           "$CN/control_v11p_sd15_softedge_fp16.safetensors"
+        dl "$HF/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth" \
+           "$CN/control_v11p_sd15_openpose.pth"
+        dl "$HF/crishhh/animatediff_controlnet/resolve/main/controlnet_checkpoint.ckpt" \
+           "$CN/controlnet_checkpoint.ckpt"
+        dl "$HF/Kim2091/AnimeSharp/resolve/main/4x-AnimeSharp.pth" \
+           "$UP/4x-AnimeSharp.pth"
+        dl "$HF/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-canny-rank256.safetensors" \
+           "$CN/control-lora-canny-rank256.safetensors"                   # SDXL Control-LoRA used by HighRes-Fix
+    fi
+
+    # --- HEAVY optional: legacy v1.0 full depth ControlNet (5.7 GB). Off by default. ---
+    if [ "${ANIM_DEPTH_CONTROLNET:-false}" = "true" ]; then
+        dl "$HF/lllyasviel/ControlNet/resolve/main/models/control_sd15_depth.pth" \
+           "$CN/control_sd15_depth.pth"
+    else
+        echo "  ⓘ skipping control_sd15_depth.pth (5.7 GB legacy depth CN) — set ANIM_DEPTH_CONTROLNET=true to fetch"
+    fi
+
+    # --- Civitai motion LoRA (token-gated). Fetched only when CIVITAI_TOKEN is set. ---
+    if [ -n "${CIVITAI_TOKEN:-}" ]; then
+        dl "https://civitai.com/api/download/models/371646" \
+           "$AML/bubblingRings_v10.safetensors"
+    else
+        echo "  ⓘ skipping bubblingRings_v10.safetensors — set CIVITAI_TOKEN to fetch the Civitai motion LoRA"
+    fi
+
+    echo "==> AnimateDiff add-on done. (FILM interpolation, DWPose & Depth-Anything models"
+    echo "    auto-download into the custom-node ckpts dirs on first use of those branches.)"
 }
 
 case "$PRESET" in
@@ -115,10 +184,22 @@ case "$PRESET" in
     fi
     ;;
 
+  none|animatediff)
+    echo "==> MODEL_PRESET='$PRESET' — skipping the LTX model set (AnimateDiff add-on below)."
+    ;;
+
   *)
-    echo "!! Unknown MODEL_PRESET='$PRESET'. Use 'ltx23' or 'ltx097'." >&2
+    echo "!! Unknown MODEL_PRESET='$PRESET'. Use 'ltx23', 'ltx097', or 'none'." >&2
     exit 1
     ;;
 esac
 
-echo "==> Provisioning complete for preset '$PRESET'."
+# --- AnimateDiff / SD1.5 add-on (ADDITIVE) — runs alongside the LTX preset by default so a
+#     single pod serves BOTH the LTX-2.3 workflows and the cool2 AnimateDiff workflow. ---
+if [ "${INSTALL_ANIMATEDIFF:-true}" = "true" ]; then
+    provision_animatediff
+else
+    echo "==> INSTALL_ANIMATEDIFF=false — skipping the AnimateDiff/SD1.5 model set."
+fi
+
+echo "==> Provisioning complete (preset '$PRESET', animatediff=${INSTALL_ANIMATEDIFF:-true})."

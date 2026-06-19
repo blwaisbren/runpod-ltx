@@ -1,4 +1,6 @@
-# ComfyUI + LTX-2.3 video-to-video (Canny / Depth / Pose IC-LoRA) — RunPod template image.
+# ComfyUI for RunPod — serves BOTH the LTX-2.3 video-to-video (Canny/Depth/Pose IC-LoRA)
+# workflows AND a legacy SD1.5 / AnimateDiff workflow (ControlNet + IPAdapter + Ultimate SD
+# Upscale + FILM interpolation) from a single image.
 #
 # Design: the IMAGE ships ComfyUI + all required custom nodes (versioned by image tag).
 # The big model weights are NOT baked in — they download to a persistent RunPod
@@ -47,15 +49,49 @@ RUN git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
     git clone --depth 1 https://github.com/cubiq/ComfyUI_essentials.git && \
     git clone --depth 1 https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git
 
+# --- Custom nodes for the legacy SD1.5 / AnimateDiff workflow (cool2 upscale+interp) ---
+#   ComfyUI_IPAdapter_plus       : IPAdapter* loaders/encoders + PrepImageForClipVision
+#   efficiency-nodes-comfyui     : Efficient Loader, KSampler (Efficient), HighRes-Fix, *Stacker
+#   ComfyUI-Advanced-ControlNet  : ControlNetLoaderAdvanced
+#   ComfyUI-AnimateDiff-Evolved  : ADE_* motion loader / motion-LoRA / context / prompt-schedule
+#   was-node-suite-comfyui       : Text Multiline, Upscale Model Loader (reqs SKIPPED below)
+#   ComfyUI_FizzNodes            : BatchPromptSchedule
+#   ComfyLiterals                : Float
+#   ComfyUI-KJNodes              : GetImageRangeFromBatch
+#   ComfyUI_UltimateSDUpscale    : UltimateSDUpscale (vendors a submodule — clone --recursive)
+#   rgthree-comfy                : Fast Bypasser / Mute-Bypass Repeater (frontend nodes)
+RUN git clone --depth 1 https://github.com/cubiq/ComfyUI_IPAdapter_plus.git && \
+    git clone --depth 1 https://github.com/jags111/efficiency-nodes-comfyui.git && \
+    git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git && \
+    git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git && \
+    git clone --depth 1 https://github.com/WASasquatch/was-node-suite-comfyui.git && \
+    git clone --depth 1 https://github.com/FizzleDorf/ComfyUI_FizzNodes.git && \
+    git clone --depth 1 https://github.com/M1kep/ComfyLiterals.git && \
+    git clone --depth 1 https://github.com/kijai/ComfyUI-KJNodes.git && \
+    git clone --depth 1 --recurse-submodules https://github.com/ssitu/ComfyUI_UltimateSDUpscale.git && \
+    git clone --depth 1 https://github.com/rgthree/rgthree-comfy.git
+
 # Install each node's Python deps. Tolerant (|| true) so a single noisy node
 # (e.g. controlnet_aux's optional extras) can't fail the whole build — ComfyUI-Manager
 # can repair anything missing at runtime.
+#
+# We SKIP was-node-suite-comfyui's requirements on purpose: they pull numba (which can silently
+# DOWNGRADE numpy and break the rest of the stack), rembg/onnxruntime, and a 2nd opencv variant.
+# The only two WAS nodes this workflow uses — Text Multiline, Upscale Model Loader — load fine on
+# ComfyUI's base deps (numpy / opencv-from-controlnet_aux / spandrel). Install WAS's heavier
+# image-processing deps later via ComfyUI-Manager if you ever want them.
 RUN for d in */ ; do \
+        case "$d" in was-node-suite-comfyui/) echo "==> skipping bulk reqs for ${d} (avoids numpy downgrade)"; continue;; esac; \
         if [ -f "${d}requirements.txt" ]; then \
             echo "==> pip install for ${d}"; \
             pip install --no-cache-dir -r "${d}requirements.txt" || echo "WARN: deps for ${d} had issues"; \
         fi; \
     done
+
+# Belt-and-suspenders: efficiency-nodes hard-imports simpleeval at load time (and its
+# requirements.txt also drags in the heavier clip-interrogator). Guarantee simpleeval is present
+# so a hiccup in that line above can't make all 6 efficiency nodes silently vanish.
+RUN pip install --no-cache-dir simpleeval
 
 # Pin kornia LAST so nothing overrides it. ComfyUI-LTXVideo lists kornia UNPINNED, which
 # resolves to 0.8.3 — that release removed symbols the pack imports
@@ -72,6 +108,10 @@ WORKDIR /
 COPY scripts/start.sh /start.sh
 COPY scripts/provisioning.sh /provisioning.sh
 RUN chmod +x /start.sh /provisioning.sh
+
+# --- Bundled example workflow(s) surfaced in the ComfyUI sidebar by start.sh ---
+# (The LTX examples ship inside the ComfyUI-LTXVideo node; this is the SD1.5/AnimateDiff one.)
+COPY workflows/animatediff /workflows_bundled/animatediff
 
 # 8188 = ComfyUI, 8888 = JupyterLab
 EXPOSE 8188 8888

@@ -4,7 +4,9 @@
 *.md
 docs
 runpod
-workflows
+# Bundle only the AnimateDiff example workflow into the image; ignore the rest of workflows/.
+workflows/*
+!workflows/animatediff
 models
 output
 input

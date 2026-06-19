@@ -45,6 +45,44 @@ Here canny and depth are **separate** LoRAs — load the one you want:
 with checkpoint `ltxv-13b-0.9.7-dev-fp8.safetensors` and encoder
 `t5xxl_fp8_e4m3fn_scaled.safetensors`. **Use the `-comfyui` LoRA files, not `-diffusers`.**
 
+## SD1.5 / AnimateDiff workflow (cool2)
+
+This image **also** bundles a legacy **SD1.5 + AnimateDiff** video pipeline, independent of the
+LTX presets. It's surfaced in the sidebar at
+**Workflows → `AnimateDiff-examples/` → `cool2-with-upscale-and-interp.json`**.
+
+It runs on **AnimateLCM** (low-step LCM motion) with IPAdapter style transfer, a ControlNet
+stack, an Ultimate-SD-Upscale + ESRGAN highres pass, and FILM frame interpolation. It's SD1.5,
+so it's **light on VRAM** — any 8 GB+ GPU is plenty (it'll run fine on whatever GPU you rented
+for LTX).
+
+**Models (provisioned by default via `INSTALL_ANIMATEDIFF=true`):**
+
+| Slot | File | Branch |
+|---|---|---|
+| Checkpoint | `photonLCM_v10.safetensors` (Baked VAE) | active |
+| LCM LoRA | `lcm-lora-sdv1-5.safetensors` | active |
+| Motion module | `sd15_t2v_beta.ckpt` (AnimateLCM) | active |
+| ControlNet | `control_v11p_sd15_lineart_fp16.safetensors` | active |
+| IPAdapter | `ip-adapter-plus_sd15.safetensors` + `CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors` | active |
+| Upscaler | `4x_RealisticRescaler_100000_G.pth` | active |
+| Interpolation | `film_net_fp32.pt` (auto-downloads on first run) | active |
+| Optional CN | openpose `.pth`, softedge fp16, `controlnet_checkpoint.ckpt`, `4x-AnimeSharp.pth`, SDXL `control-lora-canny-rank256` | **bypassed** (staged so dropdowns resolve) |
+| Heavy optional | `control_sd15_depth.pth` (5.7 GB) | off — set `ANIM_DEPTH_CONTROLNET=true` |
+| Motion LoRA | `bubblingRings_v10.safetensors` (Civitai) | off — set `CIVITAI_TOKEN` |
+
+**How to drive it:**
+1. `Load Image` / the video-load nodes — your driving frames.
+2. The **lineart** ControlNet branch is enabled by default; the openpose/softedge/depth and
+   AnimateDiff-CN branches are **bypassed** — un-bypass (Ctrl-B) any whose model is staged.
+3. Set prompts in the `Efficient Loader` / `BatchPromptSchedule` nodes; LCM likes **~4–8 steps**.
+4. The HighRes-Fix / Ultimate SD Upscale + FILM interpolation tail is wired up; **Queue**.
+
+> **Two opt-in models.** `bubblingRings_v10.safetensors` (a Civitai motion LoRA, used by a
+> bypassed node) downloads only if you set a **`CIVITAI_TOKEN`** env var. The 5.7 GB legacy
+> `control_sd15_depth.pth` downloads only with **`ANIM_DEPTH_CONTROLNET=true`**. Everything else
+> is fetched automatically from public HuggingFace repos.
+
 ## Tips
 
 - **Missing/red nodes?** ComfyUI-Manager → *Install Missing Custom Nodes* → restart.
