@@ -179,11 +179,12 @@ download (the "rename from" column).
 | `ip-adapter-plus_sd15.safetensors` | `h94/IP-Adapter` (`models/`) | 98 MB | `ipadapter` | — | active |
 | `4x_RealisticRescaler_100000_G.pth` | `gemasai/4x_RealisticRescaler_100000_G` | 134 MB | `upscale_models` | — | active |
 | `control_v11p_sd15_softedge_fp16.safetensors` | `comfyanonymous/ControlNet-v1-1_fp16_safetensors` | 723 MB | `controlnet` | — | bypassed |
+| `control_v11f1p_sd15_depth_fp16.safetensors` | `comfyanonymous/ControlNet-v1-1_fp16_safetensors` | 723 MB | `controlnet` | — | bypassed (**depth branch, default**) |
 | `control_v11p_sd15_openpose.pth` | `lllyasviel/ControlNet-v1-1` | 1.45 GB | `controlnet` | — | bypassed |
 | `controlnet_checkpoint.ckpt` | `crishhh/animatediff_controlnet` | 1.45 GB | `controlnet` | — | bypassed |
 | `4x-AnimeSharp.pth` | `Kim2091/AnimeSharp` | 67 MB | `upscale_models` | — | bypassed |
 | `control-lora-canny-rank256.safetensors` | `stabilityai/control-lora` (`control-LoRAs-rank256/`) | 774 MB | `controlnet` | — | bypassed (SDXL) |
-| `control_sd15_depth.pth` | `lllyasviel/ControlNet` (`models/`) | **5.71 GB** | `controlnet` | — | off (`ANIM_DEPTH_CONTROLNET=true`) |
+| `control_sd15_depth.pth` *(legacy)* | `lllyasviel/ControlNet` (`models/`) | **5.71 GB** | `controlnet` | — | off (`ANIM_DEPTH_CONTROLNET=true`) — superseded by the fp16 depth above |
 | `bubblingRings_v10.safetensors` | Civitai `api/download/models/371646` (modelId 331718) | 129 MB | `animatediff_motion_lora` | — | off (`CIVITAI_TOKEN`) |
 
 **Runtime auto-downloads (not pre-staged):** `film_net_fp32.pt` (FILM VFI → from
@@ -195,4 +196,6 @@ bypassed depth/pose preprocessors, so they only fetch if you enable those branch
 **Notes:** `photonLCM_v10` is an unofficial HF re-upload of Civitai "Photon - LCM" (model
 306814) — fine for bytes; verify SHA256 if provenance matters. The IPAdapter CLIP-Vision must
 come from **h94/IP-Adapter** (2.53 GB vision-only encoder), **not** the laion repo's 3.94 GB
-full CLIP. Active path ≈ 7.6 GB; +optional ≈ 4.5 GB; +heavy depth = 5.7 GB more.
+full CLIP. The workflow's depth node now points to the 723 MB **fp16** depth CN (not the 5.7 GB
+legacy `control_sd15_depth.pth`). Active path ≈ 7.6 GB; +optional ≈ 5.2 GB; +legacy depth 5.7 GB
+only with `ANIM_DEPTH_CONTROLNET=true`.

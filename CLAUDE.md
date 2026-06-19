@@ -44,8 +44,10 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
 - **AnimateDiff filename renames:** 3 source files differ from what the workflow expects — `dl()` saves under
   the dest name so it renames on download: `pytorch_lora_weights→lcm-lora-sdv1-5`, `AnimateLCM_sd15_t2v.ckpt→sd15_t2v_beta.ckpt`,
   IPAdapter `image_encoder/model.safetensors→CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors`.
-- **2 opt-in AnimateDiff models:** `bubblingRings_v10` is Civitai-gated (needs `CIVITAI_TOKEN`); the 5.7 GB legacy
-  `control_sd15_depth.pth` is off unless `ANIM_DEPTH_CONTROLNET=true`. Both back **bypassed** nodes, so default-off is safe.
+- **Depth CN swapped to fp16 (2026-06-19):** the workflow's depth node was repointed from the 5.7 GB legacy
+  `control_sd15_depth.pth` → the 723 MB `control_v11f1p_sd15_depth_fp16.safetensors` (comfyanonymous fp16 repo),
+  now downloaded by default in the `ANIM_OPTIONAL_MODELS` set. `ANIM_DEPTH_CONTROLNET` is now legacy-only (off).
+- **Remaining opt-in:** `bubblingRings_v10` is Civitai-gated (needs `CIVITAI_TOKEN`); it backs a **bypassed** node.
 
 ## Status / TODO
 - ✅ Deployed and verified end-to-end. Union Control (canny/depth), V2V, Motion-Track, Inpaint 2.3 workflows
@@ -54,8 +56,9 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   redeployed `comfyui-ltx23` (same `ltx-volume`, `MODEL_PRESET=ltx23` auto-installs the add-on). On the pod,
   `AnimateDiff-examples/cool2-...json` loads with **0 missing nodes** (89 nodes) and renders end-to-end:
   AnimateDiff → Ultimate SD Upscale → FILM interpolation all produced output. Both LTX-2.3 and the SD1.5/
-  AnimateDiff workflow now run from the one image. (Opt-ins still untested live: `CIVITAI_TOKEN` bubblingRings
-  LoRA + `ANIM_DEPTH_CONTROLNET` depth CN — both back bypassed nodes so not on the default path.)
+  AnimateDiff workflow now run from the one image. **Follow-up (2026-06-19):** swapped the depth ControlNet to
+  the 723 MB fp16 model (default-on) and repointed the workflow's depth node to it — pushed for rebuild.
+  (Remaining opt-in untested live: `CIVITAI_TOKEN` bubblingRings LoRA — backs a bypassed node.)
 - ⬜ Normal-browser (non-incognito) proxy access — clear cookie / proper login handshake.
 - ⬜ Optional: add `RES4LYF` (`ClownSampler_Beta`) + an `ImagePadForOutpaintTargetSize` provider to make the
   T2V-two-stage and Outpaint examples turnkey too (not needed for canny/depth).

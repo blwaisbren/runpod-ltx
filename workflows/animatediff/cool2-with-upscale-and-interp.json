@@ -3290,7 +3290,7 @@
         }
       },
       "widgets_values": [
-        "control_sd15_depth.pth"
+        "control_v11f1p_sd15_depth_fp16.safetensors"
       ],
       "color": "#2a363b",
       "bgcolor": "#3f5159"

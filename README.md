@@ -116,8 +116,8 @@ Full per-mode notes: [`workflows/README.md`](workflows/README.md).
 | `GEMMA_VARIANT` | `fp8_scaled` | `ltx23` encoder precision: `full` / `fpmixed` / `fp8_scaled` / `fp4_mixed` |
 | `LTX097_UPSCALERS` | `false` | `ltx097`: also fetch the 0.9.7 spatial/temporal upscalers |
 | `INSTALL_ANIMATEDIFF` | `true` | Download the SD1.5/AnimateDiff model set (additive to the LTX preset) |
-| `ANIM_OPTIONAL_MODELS` | `true` | Also stage the **bypassed** control branches (openpose/softedge/etc.) |
-| `ANIM_DEPTH_CONTROLNET` | `false` | Fetch the heavy 5.7 GB legacy `control_sd15_depth.pth` |
+| `ANIM_OPTIONAL_MODELS` | `true` | Also stage the **bypassed** control branches (openpose/softedge/**depth fp16**/etc.) |
+| `ANIM_DEPTH_CONTROLNET` | `false` | Fetch the *legacy* 5.7 GB `control_sd15_depth.pth` (the 723 MB fp16 depth is already default) |
 | `CIVITAI_TOKEN` | _(empty)_ | Needed only for the `bubblingRings` Civitai motion LoRA |
 | `SKIP_PROVISIONING` | `false` | `true` = don't download models (you'll manage them yourself) |
 | `ENABLE_JUPYTER` | `true` | Start JupyterLab on `:8888` |

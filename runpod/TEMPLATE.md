@@ -45,8 +45,8 @@ then deploy a Pod from the template onto the volume.
 | `MODEL_PRESET` | `ltx23` |
 | `GEMMA_VARIANT` | `fp8_scaled` |
 | `INSTALL_ANIMATEDIFF` | `true` _(downloads the SD1.5/AnimateDiff model set alongside LTX)_ |
-| `ANIM_OPTIONAL_MODELS` | `true` _(stage the bypassed control branches; `false` to skip ~4.5 GB)_ |
-| `ANIM_DEPTH_CONTROLNET` | _(optional — `true` to fetch the heavy 5.7 GB legacy depth CN)_ |
+| `ANIM_OPTIONAL_MODELS` | `true` _(stage the bypassed control branches incl. the 723 MB fp16 depth; `false` to skip ~5.2 GB)_ |
+| `ANIM_DEPTH_CONTROLNET` | _(optional — `true` only for the legacy 5.7 GB `control_sd15_depth.pth`)_ |
 | `CIVITAI_TOKEN` | _(optional — only for the bubblingRings Civitai motion LoRA)_ |
 | `ENABLE_JUPYTER` | `true` |
 | `JUPYTER_TOKEN` | _(set a password if you'll expose 8888)_ |

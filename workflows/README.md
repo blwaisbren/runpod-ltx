@@ -67,8 +67,8 @@ for LTX).
 | IPAdapter | `ip-adapter-plus_sd15.safetensors` + `CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors` | active |
 | Upscaler | `4x_RealisticRescaler_100000_G.pth` | active |
 | Interpolation | `film_net_fp32.pt` (auto-downloads on first run) | active |
-| Optional CN | openpose `.pth`, softedge fp16, `controlnet_checkpoint.ckpt`, `4x-AnimeSharp.pth`, SDXL `control-lora-canny-rank256` | **bypassed** (staged so dropdowns resolve) |
-| Heavy optional | `control_sd15_depth.pth` (5.7 GB) | off — set `ANIM_DEPTH_CONTROLNET=true` |
+| Optional CN | openpose `.pth`, softedge fp16, **depth fp16** (`control_v11f1p_sd15_depth_fp16`, 723 MB), `controlnet_checkpoint.ckpt`, `4x-AnimeSharp.pth`, SDXL `control-lora-canny-rank256` | **bypassed** (staged so dropdowns resolve) |
+| Legacy depth | `control_sd15_depth.pth` (5.7 GB old format) | off — set `ANIM_DEPTH_CONTROLNET=true` (the fp16 depth above is the default) |
 | Motion LoRA | `bubblingRings_v10.safetensors` (Civitai) | off — set `CIVITAI_TOKEN` |
 
 **How to drive it:**
@@ -78,10 +78,11 @@ for LTX).
 3. Set prompts in the `Efficient Loader` / `BatchPromptSchedule` nodes; LCM likes **~4–8 steps**.
 4. The HighRes-Fix / Ultimate SD Upscale + FILM interpolation tail is wired up; **Queue**.
 
-> **Two opt-in models.** `bubblingRings_v10.safetensors` (a Civitai motion LoRA, used by a
-> bypassed node) downloads only if you set a **`CIVITAI_TOKEN`** env var. The 5.7 GB legacy
-> `control_sd15_depth.pth` downloads only with **`ANIM_DEPTH_CONTROLNET=true`**. Everything else
-> is fetched automatically from public HuggingFace repos.
+> **Opt-in extras.** Everything (including the 723 MB fp16 depth ControlNet) is fetched
+> automatically from public HuggingFace repos — **except** `bubblingRings_v10.safetensors` (a
+> Civitai motion LoRA, used by a bypassed node), which needs a **`CIVITAI_TOKEN`**. The old
+> 5.7 GB `control_sd15_depth.pth` is no longer used by the workflow; set
+> **`ANIM_DEPTH_CONTROLNET=true`** only if you specifically need that legacy file.
 
 ## Tips
 

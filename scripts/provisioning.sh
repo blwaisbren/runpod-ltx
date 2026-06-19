@@ -90,6 +90,8 @@ provision_animatediff () {
     if [ "${ANIM_OPTIONAL_MODELS:-true}" = "true" ]; then
         dl "$HF/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_softedge_fp16.safetensors" \
            "$CN/control_v11p_sd15_softedge_fp16.safetensors"
+        dl "$HF/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11f1p_sd15_depth_fp16.safetensors" \
+           "$CN/control_v11f1p_sd15_depth_fp16.safetensors"               # modern depth CN (723 MB) — workflow default
         dl "$HF/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth" \
            "$CN/control_v11p_sd15_openpose.pth"
         dl "$HF/crishhh/animatediff_controlnet/resolve/main/controlnet_checkpoint.ckpt" \
@@ -100,12 +102,14 @@ provision_animatediff () {
            "$CN/control-lora-canny-rank256.safetensors"                   # SDXL Control-LoRA used by HighRes-Fix
     fi
 
-    # --- HEAVY optional: legacy v1.0 full depth ControlNet (5.7 GB). Off by default. ---
+    # --- LEGACY optional: the old 5.7 GB v1.0 full depth ControlNet (`control_sd15_depth.pth`).
+    #     The modern 723 MB depth CN above is now the workflow default; this is only for graphs
+    #     still pinned to the old filename. Off unless ANIM_DEPTH_CONTROLNET=true. ---
     if [ "${ANIM_DEPTH_CONTROLNET:-false}" = "true" ]; then
         dl "$HF/lllyasviel/ControlNet/resolve/main/models/control_sd15_depth.pth" \
            "$CN/control_sd15_depth.pth"
     else
-        echo "  ⓘ skipping control_sd15_depth.pth (5.7 GB legacy depth CN) — set ANIM_DEPTH_CONTROLNET=true to fetch"
+        echo "  ⓘ skipping legacy control_sd15_depth.pth (5.7 GB) — modern depth CN is default; set ANIM_DEPTH_CONTROLNET=true for the old file"
     fi
 
     # --- Civitai motion LoRA (token-gated). Fetched only when CIVITAI_TOKEN is set. ---
