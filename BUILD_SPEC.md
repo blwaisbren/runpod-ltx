@@ -154,6 +154,14 @@ Frame-Interpolation. **Added** for this workflow:
 | `kijai/ComfyUI-KJNodes` | comfyui-kjnodes | `GetImageRangeFromBatch` | opencv-headless (coexists w/ controlnet_aux's full opencv) |
 | `ssitu/ComfyUI_UltimateSDUpscale` | comfyui_ultimatesdupscale | `UltimateSDUpscale` | **git submodule** → clone `--recurse-submodules` |
 | `rgthree/rgthree-comfy` | _(none)_ | `Fast Bypasser (rgthree)`, `Mute / Bypass Repeater (rgthree)` | empty reqs; frontend nodes |
+| `crystian/ComfyUI-Crystools` | comfyui-crystools | `Primitive integer [Crystools]` (used as `4morph-ad2`'s "Total Frames") | no pip deps beyond `requirements.txt` |
+
+**Added 2026-06-30 for `4morph-ad2.json`** (a 3rd workflow bundled in the same dir, sharing the
+table above). It reuses every node pack already listed; the only addition is ComfyUI-Crystools.
+Its `PrimitiveInt` node is tagged `cg-use-everywhere` in the exported JSON, but that's stale
+metadata from copy/paste — `PrimitiveInt` is a **core** ComfyUI node
+(`comfy_extras/nodes_primitive.py`) on any reasonably current build, so `cg-use-everywhere`
+itself is **not** required.
 
 **⚠️ WAS Node Suite deps skipped on purpose.** Its `requirements.txt` pulls `numba` (which can
 silently **downgrade numpy** and break the rest of the stack), `rembg`/`onnxruntime`, and a
@@ -199,3 +207,28 @@ come from **h94/IP-Adapter** (2.53 GB vision-only encoder), **not** the laion re
 full CLIP. The workflow's depth node now points to the 723 MB **fp16** depth CN (not the 5.7 GB
 legacy `control_sd15_depth.pth`). Active path ≈ 7.6 GB; +optional ≈ 5.2 GB; +legacy depth 5.7 GB
 only with `ANIM_DEPTH_CONTROLNET=true`.
+
+## 10. Model manifest — `4morph-ad2.json` workflow add-on (added 2026-06-30)
+
+A 3rd workflow bundled in `workflows/animatediff/`: IPAdapter-batch (3x) + a QRCode-Monster
+ControlNet driving the motion from a B/W mask video, plus user-added (loosely-wired) **upscale**
+(`UltimateSDUpscale`) and **interp** (`FILM VFI`) groups appended after the 4-frame-morph render.
+Shares most of the `cool2` model set above (✅ verified live: HF blob fetch + `curl -I`).
+
+| File (workflow expects) | Source | Size | ComfyUI dir | Rename from |
+|---|---|---|---|---|
+| `qrCodeMonster_v20.safetensors` | `monster-labs/control_v1p_sd15_qrcode_monster` (`v2/` folder) | 723 MB | `controlnet` | `control_v1p_sd15_qrcode_monster_v2.safetensors` |
+| `vae-ft-mse-840000-ema-pruned.ckpt` | `stabilityai/sd-vae-ft-mse-original` | 335 MB | `vae` | — |
+| `AnimateLCM_sd15_t2v.ckpt` | aliased (symlink) to the `sd15_t2v_beta.ckpt` already fetched for `cool2` | — | `animatediff_models` | symlink, not a 2nd download |
+| `lcm-lora-sdv1-5.safetensors`, `4x_RealisticRescaler_100000_G.pth` | already provisioned for `cool2` (same files, same names) | — | `loras`, `upscale_models` | — |
+| `photonLCM_v10.safetensors` | already provisioned for `cool2` (same file) | — | `checkpoints` | repointed from the workflow's original `realismBYSTABLEYOGI_v6LCMNSFW.safetensors` — see below |
+
+**Checkpoint swapped, not fetched.** The exported workflow's `CheckpointLoaderSimple` originally
+pointed at `realismBYSTABLEYOGI_v6LCMNSFW.safetensors`, an NSFW-tagged Civitai checkpoint. Web
+search turned up several similarly-named "Realism by Stable Yogi" variants (Pony, Illustrious,
+SDXL) but no confident match for this exact SD1.5/LCM filename/version, so rather than pin a
+guessed URL we repointed the node (in the bundled `4morph-ad2.json` itself) at
+`photonLCM_v10.safetensors`, which `cool2` already provisions — no extra download, no manual step.
+
+`film_net_fp32.pt` (FILM VFI, used by the `interp` group) auto-downloads on first use, same as
+`cool2`'s interpolation pass — see the runtime auto-downloads note above.

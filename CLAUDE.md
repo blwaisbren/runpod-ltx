@@ -11,6 +11,11 @@ Deploy field values: [runpod/TEMPLATE.md](runpod/TEMPLATE.md). Workflow usage: [
 **Also serves a legacy SD1.5 / AnimateDiff workflow** (`workflows/animatediff/cool2-with-upscale-and-interp.json`)
 from the SAME image — 10 extra node packs + a ~8 GB SD1.5 model set, provisioned **additively**
 alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links in BUILD_SPEC §8–9.
+**Plus a 3rd workflow** (`workflows/animatediff/4morph-ad2.json`, added 2026-06-30) in the same
+dir/node-pack family — IPAdapter-batch + QRCode-Monster ControlNet + user-appended (loosely wired)
+upscale/interp groups. One extra node pack (ComfyUI-Crystools) + 2 extra models, manifest in
+BUILD_SPEC §10. Its checkpoint was repointed at the already-provisioned `photonLCM_v10.safetensors`
+(the original NSFW/Civitai checkpoint wasn't auto-fetchable — see BUILD_SPEC §10).
 
 ## Live resources (as of 2026-06-18)
 - **GitHub:** `blwaisbren/runpod-ltx` (public) — push to `main` auto-builds via GitHub Actions.
@@ -80,6 +85,14 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   dashboard ComfyUI link now opens in normal Chrome with all extensions on — no incognito, no workaround.
 - ⬜ Optional: add `RES4LYF` (`ClownSampler_Beta`) + an `ImagePadForOutpaintTargetSize` provider to make the
   T2V-two-stage and Outpaint examples turnkey too (not needed for canny/depth).
+- ⬜ **`4morph-ad2.json` rolled into the image (2026-06-30), not yet deployed/verified live.** Bundled the
+  workflow file, added `ComfyUI-Crystools` to the Dockerfile, and 2 new models to provisioning.sh
+  (`qrCodeMonster_v20.safetensors`, `vae-ft-mse-840000-ema-pruned.ckpt`, both verified reachable via
+  `curl -I`). Repointed the workflow's checkpoint node at `photonLCM_v10.safetensors` (already
+  provisioned) instead of its original NSFW-tagged Civitai checkpoint, which we couldn't confidently
+  source a URL for — confirmed by the user, fully resolved, nothing manual left to do model-wise.
+  Pending: push → GHCR rebuild → fresh pod deploy → confirm 0 missing nodes. The user is still
+  hand-wiring the `upscale`/`interp` groups onto the 4-morph render inside the pod.
 - 🗓️ Built for a lecture ~July 2026 — tear down `ltx-volume` afterward to stop the ~$10/mo storage charge.
 
 ## Session log
@@ -126,3 +139,29 @@ alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links
   succeeded → user deployed a fresh pod from the template → the dashboard "ComfyUI" link now opens in normal
   Chrome (extensions on, no incognito). Done. (Reminder baked into the gotcha: Stop→Start reuses the cached old
   image; only a fresh deploy picks up image changes.)
+- **2026-06-30:** User built a 3rd AnimateDiff-family workflow locally (`4morph-ad2.json` —
+  IPAdapter-batch + QRCode-Monster ControlNet 4-frame morph, with `upscale`/`interp` groups
+  appended but only loosely wired; user finishing that wiring on the pod). Rolled it into the
+  image: bundled the JSON into `workflows/animatediff/` (auto-surfaces via the existing
+  `cp -rn` copy in start.sh — no script change needed), diffed its node/model requirements
+  against the existing manifest, and found it's almost entirely covered by what `cool2` already
+  installs. Added one missing node pack (`crystian/ComfyUI-Crystools`, for the `Primitive integer
+  [Crystools]` "Total Frames" node) to the Dockerfile. Noted but did NOT add `cg-use-everywhere`
+  — the workflow JSON tags its `PrimitiveInt` node with that cnr_id, but `PrimitiveInt` is a core
+  ComfyUI node (`comfy_extras/nodes_primitive.py`); the tag is stale copy-paste metadata, not a
+  real dependency. Added 2 new models to provisioning.sh, both verified reachable via `curl -I`
+  before adding: `qrCodeMonster_v20.safetensors` (renamed from monster-labs' `v2/…_v2.safetensors`,
+  723 MB) and `vae-ft-mse-840000-ema-pruned.ckpt` (stabilityai's standard SD1.5 VAE, 335 MB). The
+  workflow's AnimateDiff loader expects the motion module under its original filename
+  (`AnimateLCM_sd15_t2v.ckpt`), unlike `cool2` which expects it renamed to `sd15_t2v_beta.ckpt` —
+  aliased with a symlink instead of downloading the same 1.81 GB file twice. One model couldn't be
+  safely auto-sourced: `realismBYSTABLEYOGI_v6LCMNSFW.safetensors` is an NSFW-tagged Civitai
+  checkpoint; web search found several similarly-named "Realism by Stable Yogi" variants (Pony,
+  Illustrious, SDXL) but no confident match for this exact SD1.5/LCM filename, so per policy
+  against guessing URLs, flagged the gap instead of fetching it. **User follow-up:** confirmed
+  fine to just drop the NSFW checkpoint — edited the bundled `4morph-ad2.json` itself (node 564,
+  `CheckpointLoaderSimple`) to point at `photonLCM_v10.safetensors` (already provisioned for
+  `cool2`), verified the JSON diff touches only that one widget value. Fully resolved — no manual
+  step left. Updated BUILD_SPEC.md (§10), workflows/README.md, and this file.
+  **Not yet pushed/deployed** — local repo changes only, pending user go-ahead to push (triggers
+  GHCR rebuild) and redeploy a fresh pod to verify live.

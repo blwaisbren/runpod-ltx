@@ -85,6 +85,20 @@ provision_animatediff () {
     dl "$HF/gemasai/4x_RealisticRescaler_100000_G/resolve/main/4x_RealisticRescaler_100000_G.pth" \
        "$UP/4x_RealisticRescaler_100000_G.pth"                            # WAS Upscale Model Loader (active)
 
+    # --- Models for the '4morph-ad2' workflow (IPAdapter-batch + QRCode-ControlNet variant,
+    #     also bundled in this dir) — shares most of the set above, plus: ---
+    dl "$HF/monster-labs/control_v1p_sd15_qrcode_monster/resolve/main/v2/control_v1p_sd15_qrcode_monster_v2.safetensors" \
+       "$CN/qrCodeMonster_v20.safetensors"                                # rename: …_v2.safetensors -> qrCodeMonster_v20
+    dl "$HF/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.ckpt" \
+       "$MODELS/vae/vae-ft-mse-840000-ema-pruned.ckpt"
+    # 4morph-ad2's AnimateDiff loader expects the motion module under its ORIGINAL filename
+    # (unlike cool2, which expects it renamed to sd15_t2v_beta.ckpt) — alias rather than
+    # re-download the same 1.81 GB file twice.
+    ln -sf "sd15_t2v_beta.ckpt" "$AM/AnimateLCM_sd15_t2v.ckpt"
+    # Its CheckpointLoaderSimple is repointed at photonLCM_v10.safetensors (already provisioned
+    # above) instead of the workflow's original realismBYSTABLEYOGI_v6LCMNSFW.safetensors — an
+    # NSFW-tagged Civitai checkpoint we couldn't confidently pin a download URL for.
+
     # --- OPTIONAL: models for the BYPASSED control/highres branches (so dropdowns resolve;
     #     enable the branch in the UI to use them). Skip with ANIM_OPTIONAL_MODELS=false. ---
     if [ "${ANIM_OPTIONAL_MODELS:-true}" = "true" ]; then

@@ -49,7 +49,8 @@ RUN git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
     git clone --depth 1 https://github.com/cubiq/ComfyUI_essentials.git && \
     git clone --depth 1 https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git
 
-# --- Custom nodes for the legacy SD1.5 / AnimateDiff workflow (cool2 upscale+interp) ---
+# --- Custom nodes for the legacy SD1.5 / AnimateDiff workflow (cool2 upscale+interp,
+#     and the 4morph-ad2 IPAdapter-batch + QRCode-ControlNet variant) ---
 #   ComfyUI_IPAdapter_plus       : IPAdapter* loaders/encoders + PrepImageForClipVision
 #   efficiency-nodes-comfyui     : Efficient Loader, KSampler (Efficient), HighRes-Fix, *Stacker
 #   ComfyUI-Advanced-ControlNet  : ControlNetLoaderAdvanced
@@ -60,6 +61,7 @@ RUN git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
 #   ComfyUI-KJNodes              : GetImageRangeFromBatch
 #   ComfyUI_UltimateSDUpscale    : UltimateSDUpscale (vendors a submodule — clone --recursive)
 #   rgthree-comfy                : Fast Bypasser / Mute-Bypass Repeater (frontend nodes)
+#   ComfyUI-Crystools            : "Primitive integer [Crystools]" (4morph-ad2's Total Frames node)
 RUN git clone --depth 1 https://github.com/cubiq/ComfyUI_IPAdapter_plus.git && \
     git clone --depth 1 https://github.com/jags111/efficiency-nodes-comfyui.git && \
     git clone --depth 1 https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git && \
@@ -69,7 +71,8 @@ RUN git clone --depth 1 https://github.com/cubiq/ComfyUI_IPAdapter_plus.git && \
     git clone --depth 1 https://github.com/M1kep/ComfyLiterals.git && \
     git clone --depth 1 https://github.com/kijai/ComfyUI-KJNodes.git && \
     git clone --depth 1 --recurse-submodules https://github.com/ssitu/ComfyUI_UltimateSDUpscale.git && \
-    git clone --depth 1 https://github.com/rgthree/rgthree-comfy.git
+    git clone --depth 1 https://github.com/rgthree/rgthree-comfy.git && \
+    git clone --depth 1 https://github.com/crystian/ComfyUI-Crystools.git
 
 # Install each node's Python deps. Tolerant (|| true) so a single noisy node
 # (e.g. controlnet_aux's optional extras) can't fail the whole build — ComfyUI-Manager
@@ -110,7 +113,8 @@ COPY scripts/provisioning.sh /provisioning.sh
 RUN chmod +x /start.sh /provisioning.sh
 
 # --- Bundled example workflow(s) surfaced in the ComfyUI sidebar by start.sh ---
-# (The LTX examples ship inside the ComfyUI-LTXVideo node; this is the SD1.5/AnimateDiff one.)
+# (The LTX examples ship inside the ComfyUI-LTXVideo node; these are the SD1.5/AnimateDiff ones:
+#  cool2-with-upscale-and-interp.json and 4morph-ad2.json — everything in this dir is copied.)
 COPY workflows/animatediff /workflows_bundled/animatediff
 
 # 8188 = ComfyUI, 8888 = JupyterLab

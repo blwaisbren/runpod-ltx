@@ -84,6 +84,24 @@ for LTX).
 > 5.7 GB `control_sd15_depth.pth` is no longer used by the workflow; set
 > **`ANIM_DEPTH_CONTROLNET=true`** only if you specifically need that legacy file.
 
+## 4morph-ad2 workflow
+
+A 3rd bundled workflow, also under **Workflows → `AnimateDiff-examples/` → `4morph-ad2.json`**.
+Same AnimateDiff/SD1.5 family as `cool2`, but driven by **3 chained `IPAdapterBatch`** nodes for
+style transfer and a **QRCode-Monster ControlNet** reading motion off a black-and-white mask
+video, rendering a 4-frame "morph". An **`UltimateSDUpscale`** group and a **`FILM VFI`**
+interpolation group are appended after the render — they're present but **only loosely wired**;
+finish connecting them in the ComfyUI canvas before queueing.
+
+**Models:** reuses most of `cool2`'s set (`photonLCM_v10.safetensors` as the checkpoint,
+`lcm-lora-sdv1-5.safetensors`, `4x_RealisticRescaler_100000_G.pth`, the AnimateLCM motion module
+— aliased under its original filename) plus two new ones fetched automatically:
+`qrCodeMonster_v20.safetensors` (ControlNet) and `vae-ft-mse-840000-ema-pruned.ckpt` (VAE).
+Everything is provisioned by default — nothing to fetch by hand. (The workflow's checkpoint node
+originally pointed at an NSFW-tagged Civitai checkpoint we couldn't confidently source a URL for;
+it's been repointed at `photonLCM_v10.safetensors` instead. Swap it for any other SD1.5 LCM
+checkpoint if you'd prefer.) See BUILD_SPEC.md §10 for the full manifest.
+
 ## Tips
 
 - **Missing/red nodes?** ComfyUI-Manager → *Install Missing Custom Nodes* → restart.
