@@ -91,6 +91,13 @@ provision_animatediff () {
        "$CN/qrCodeMonster_v20.safetensors"                                # rename: …_v2.safetensors -> qrCodeMonster_v20
     dl "$HF/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.ckpt" \
        "$MODELS/vae/vae-ft-mse-840000-ema-pruned.ckpt"
+    # IPAdapterUnifiedLoader's "VIT-G (medium strength)" preset (used by its 3rd IPAdapter Batch
+    # node) needs its OWN clip-vision + ipadapter pair, distinct from the ViT-H pair above —
+    # without these the loader throws "ClipVision model not found."
+    dl "$HF/h94/IP-Adapter/resolve/main/sdxl_models/image_encoder/model.safetensors" \
+       "$CV/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors"                # rename: IPAdapter CLIP-Vision (ViT-bigG)
+    dl "$HF/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_vit-G.safetensors" \
+       "$IP/ip-adapter_sd15_vit-G.safetensors"
     # 4morph-ad2's AnimateDiff loader expects the motion module under its ORIGINAL filename
     # (unlike cool2, which expects it renamed to sd15_t2v_beta.ckpt) — alias rather than
     # re-download the same 1.81 GB file twice.

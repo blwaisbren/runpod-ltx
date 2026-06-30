@@ -174,3 +174,15 @@ original NSFW/Civitai checkpoint), manifest in BUILD_SPEC §10.
   provisioning.sh and repointed the bundled workflow's `CheckpointLoaderSimple` (node 564) at it,
   same way as the `photonLCM_v10` swap. `photonLCM_v10` stays provisioned for `cool2`. Updated
   BUILD_SPEC §10, workflows/README.md, this file. Pending: push + rebuild + redeploy.
+- **2026-06-30 (live test):** Pushed (`20cbbfd`) → GHCR build succeeded → user deployed a fresh
+  pod and confirmed the v4 LCM realism checkpoint visibly outperforms photonLCM_v10 (more skin
+  texture/detail). Hit a new live error: `IPAdapterUnifiedLoader` set to its `VIT-G (medium
+  strength)` preset threw `Exception: ClipVision model not found.` Traced it in
+  `comfyui_ipadapter_plus/utils.py` — `get_clipvision_file`/`get_ipadapter_file` resolve the
+  `vit-g` preset via filename regex (`ViT.bigG.14.*39B.b160k` for clip-vision,
+  `sd15.vit.g\.(safetensors|bin)$` for the ipadapter model), and neither file was provisioned —
+  `cool2`/4morph only fetch the ViT-H pair. Added both (verified reachable via `curl -I`):
+  `CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors` (3.69 GB, renamed from h94/IP-Adapter's
+  `sdxl_models/image_encoder/model.safetensors` — exactly what the workflow's own Note node
+  already documented) and `ip-adapter_sd15_vit-G.safetensors` (46.2 MB, same repo's `models/`).
+  Updated BUILD_SPEC §10, workflows/README.md, this file. Pending: push + rebuild + redeploy.

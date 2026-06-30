@@ -95,13 +95,15 @@ finish connecting them in the ComfyUI canvas before queueing.
 
 **Models:** reuses most of `cool2`'s set (`lcm-lora-sdv1-5.safetensors`,
 `4x_RealisticRescaler_100000_G.pth`, the AnimateLCM motion module — aliased under its original
-filename) plus three new ones fetched automatically: `qrCodeMonster_v20.safetensors` (ControlNet),
-`vae-ft-mse-840000-ema-pruned.ckpt` (VAE), and the checkpoint
+filename) plus several new ones fetched automatically: `qrCodeMonster_v20.safetensors`
+(ControlNet), `vae-ft-mse-840000-ema-pruned.ckpt` (VAE), the checkpoint
 `realismBYSTABLEYOGI_v4LCM.safetensors` (a v4 LCM "Realism by Stable Yogi" SD1.5 checkpoint —
 the workflow's original `realismBYSTABLEYOGI_v6LCMNSFW.safetensors` was an NSFW Civitai upload we
 couldn't confidently source, so this is a close, verified-reachable HF substitute from the same
-uploader as `photonLCM_v10`). Everything is provisioned by default — nothing to fetch by hand.
-See BUILD_SPEC.md §10 for the full manifest.
+uploader as `photonLCM_v10`), and a 2nd clip-vision/ipadapter pair (`CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors`
++ `ip-adapter_sd15_vit-G.safetensors`) for the 3rd `IPAdapterBatch` chain's `VIT-G` preset.
+Everything is provisioned by default — nothing to fetch by hand. See BUILD_SPEC.md §10 for the
+full manifest.
 
 ## Tips
 

@@ -222,6 +222,15 @@ Shares most of the `cool2` model set above (✅ verified live: HF blob fetch + `
 | `AnimateLCM_sd15_t2v.ckpt` | aliased (symlink) to the `sd15_t2v_beta.ckpt` already fetched for `cool2` | — | `animatediff_models` | symlink, not a 2nd download |
 | `lcm-lora-sdv1-5.safetensors`, `4x_RealisticRescaler_100000_G.pth` | already provisioned for `cool2` (same files, same names) | — | `loras`, `upscale_models` | — |
 | `realismBYSTABLEYOGI_v4LCM.safetensors` | `moonshotmillion/REALISM_BY_STABLE_YOGI_v4` | 2.13 GB | `checkpoints` | — |
+| `CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors` | `h94/IP-Adapter` (`sdxl_models/image_encoder/`) | 3.69 GB | `clip_vision` | `model.safetensors` |
+| `ip-adapter_sd15_vit-G.safetensors` | `h94/IP-Adapter` (`models/`) | 46.2 MB | `ipadapter` | — |
+
+**IPAdapterUnifiedLoader "VIT-G" preset.** The workflow's 3rd `IPAdapterBatch` chain uses the
+`IPAdapterUnifiedLoader` set to `VIT-G (medium strength)`, which is a **separate** clip-vision +
+ipadapter pair from the ViT-H one `cool2` already provisions — `IPAdapterPlus.py`'s
+`get_clipvision_file`/`get_ipadapter_file` resolve it via filename regex
+(`ViT.bigG.14.*39B.b160k` / `sd15.vit.g\.(safetensors|bin)$`), so the exact renamed filenames
+above matter. Without them the loader throws `Exception: ClipVision model not found.`
 
 **Checkpoint swapped.** The exported workflow's `CheckpointLoaderSimple` originally pointed at
 `realismBYSTABLEYOGI_v6LCMNSFW.safetensors`, an NSFW-tagged Civitai checkpoint we couldn't
