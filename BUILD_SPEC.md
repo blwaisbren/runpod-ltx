@@ -221,14 +221,16 @@ Shares most of the `cool2` model set above (✅ verified live: HF blob fetch + `
 | `vae-ft-mse-840000-ema-pruned.ckpt` | `stabilityai/sd-vae-ft-mse-original` | 335 MB | `vae` | — |
 | `AnimateLCM_sd15_t2v.ckpt` | aliased (symlink) to the `sd15_t2v_beta.ckpt` already fetched for `cool2` | — | `animatediff_models` | symlink, not a 2nd download |
 | `lcm-lora-sdv1-5.safetensors`, `4x_RealisticRescaler_100000_G.pth` | already provisioned for `cool2` (same files, same names) | — | `loras`, `upscale_models` | — |
-| `photonLCM_v10.safetensors` | already provisioned for `cool2` (same file) | — | `checkpoints` | repointed from the workflow's original `realismBYSTABLEYOGI_v6LCMNSFW.safetensors` — see below |
+| `realismBYSTABLEYOGI_v4LCM.safetensors` | `moonshotmillion/REALISM_BY_STABLE_YOGI_v4` | 2.13 GB | `checkpoints` | — |
 
-**Checkpoint swapped, not fetched.** The exported workflow's `CheckpointLoaderSimple` originally
-pointed at `realismBYSTABLEYOGI_v6LCMNSFW.safetensors`, an NSFW-tagged Civitai checkpoint. Web
-search turned up several similarly-named "Realism by Stable Yogi" variants (Pony, Illustrious,
-SDXL) but no confident match for this exact SD1.5/LCM filename/version, so rather than pin a
-guessed URL we repointed the node (in the bundled `4morph-ad2.json` itself) at
-`photonLCM_v10.safetensors`, which `cool2` already provisions — no extra download, no manual step.
+**Checkpoint swapped.** The exported workflow's `CheckpointLoaderSimple` originally pointed at
+`realismBYSTABLEYOGI_v6LCMNSFW.safetensors`, an NSFW-tagged Civitai checkpoint we couldn't
+confidently pin a URL for (several similarly-named "Realism by Stable Yogi" variants exist —
+Pony, Illustrious, SDXL — none matching that exact SD1.5/LCM filename/version). First repointed
+the node at `photonLCM_v10.safetensors` as a working fallback, then found and verified
+`realismBYSTABLEYOGI_v4LCM.safetensors` reachable on HF under **`moonshotmillion`** — the same
+uploader this repo already trusts for `photonLCM_v10` — and repointed the node at that instead
+(✅ verified live: `curl -I`, 2.13 GB). `photonLCM_v10.safetensors` stays provisioned for `cool2`.
 
 `film_net_fp32.pt` (FILM VFI, used by the `interp` group) auto-downloads on first use, same as
 `cool2`'s interpolation pass — see the runtime auto-downloads note above.

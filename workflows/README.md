@@ -93,14 +93,15 @@ video, rendering a 4-frame "morph". An **`UltimateSDUpscale`** group and a **`FI
 interpolation group are appended after the render — they're present but **only loosely wired**;
 finish connecting them in the ComfyUI canvas before queueing.
 
-**Models:** reuses most of `cool2`'s set (`photonLCM_v10.safetensors` as the checkpoint,
-`lcm-lora-sdv1-5.safetensors`, `4x_RealisticRescaler_100000_G.pth`, the AnimateLCM motion module
-— aliased under its original filename) plus two new ones fetched automatically:
-`qrCodeMonster_v20.safetensors` (ControlNet) and `vae-ft-mse-840000-ema-pruned.ckpt` (VAE).
-Everything is provisioned by default — nothing to fetch by hand. (The workflow's checkpoint node
-originally pointed at an NSFW-tagged Civitai checkpoint we couldn't confidently source a URL for;
-it's been repointed at `photonLCM_v10.safetensors` instead. Swap it for any other SD1.5 LCM
-checkpoint if you'd prefer.) See BUILD_SPEC.md §10 for the full manifest.
+**Models:** reuses most of `cool2`'s set (`lcm-lora-sdv1-5.safetensors`,
+`4x_RealisticRescaler_100000_G.pth`, the AnimateLCM motion module — aliased under its original
+filename) plus three new ones fetched automatically: `qrCodeMonster_v20.safetensors` (ControlNet),
+`vae-ft-mse-840000-ema-pruned.ckpt` (VAE), and the checkpoint
+`realismBYSTABLEYOGI_v4LCM.safetensors` (a v4 LCM "Realism by Stable Yogi" SD1.5 checkpoint —
+the workflow's original `realismBYSTABLEYOGI_v6LCMNSFW.safetensors` was an NSFW Civitai upload we
+couldn't confidently source, so this is a close, verified-reachable HF substitute from the same
+uploader as `photonLCM_v10`). Everything is provisioned by default — nothing to fetch by hand.
+See BUILD_SPEC.md §10 for the full manifest.
 
 ## Tips
 

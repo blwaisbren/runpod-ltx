@@ -95,9 +95,11 @@ provision_animatediff () {
     # (unlike cool2, which expects it renamed to sd15_t2v_beta.ckpt) — alias rather than
     # re-download the same 1.81 GB file twice.
     ln -sf "sd15_t2v_beta.ckpt" "$AM/AnimateLCM_sd15_t2v.ckpt"
-    # Its CheckpointLoaderSimple is repointed at photonLCM_v10.safetensors (already provisioned
-    # above) instead of the workflow's original realismBYSTABLEYOGI_v6LCMNSFW.safetensors — an
-    # NSFW-tagged Civitai checkpoint we couldn't confidently pin a download URL for.
+    # The workflow's checkpoint: not the original realismBYSTABLEYOGI_v6LCMNSFW.safetensors
+    # (Civitai NSFW upload, couldn't confidently pin a URL) but the v4 LCM variant, re-uploaded by
+    # moonshotmillion — the same uploader this repo already trusts for photonLCM_v10 above.
+    dl "$HF/moonshotmillion/REALISM_BY_STABLE_YOGI_v4/resolve/main/realismBYSTABLEYOGI_v4LCM.safetensors" \
+       "$CK/realismBYSTABLEYOGI_v4LCM.safetensors"
 
     # --- OPTIONAL: models for the BYPASSED control/highres branches (so dropdowns resolve;
     #     enable the branch in the UI to use them). Skip with ANIM_OPTIONAL_MODELS=false. ---

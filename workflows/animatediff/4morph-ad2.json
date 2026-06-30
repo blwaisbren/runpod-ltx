@@ -2109,7 +2109,7 @@
         }
       },
       "widgets_values": [
-        "photonLCM_v10.safetensors"
+        "realismBYSTABLEYOGI_v4LCM.safetensors"
       ],
       "color": "#232",
       "bgcolor": "#353"

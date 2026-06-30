@@ -13,9 +13,9 @@ from the SAME image — 10 extra node packs + a ~8 GB SD1.5 model set, provision
 alongside LTX by default (`INSTALL_ANIMATEDIFF=true`). Manifest + verified links in BUILD_SPEC §8–9.
 **Plus a 3rd workflow** (`workflows/animatediff/4morph-ad2.json`, added 2026-06-30) in the same
 dir/node-pack family — IPAdapter-batch + QRCode-Monster ControlNet + user-appended (loosely wired)
-upscale/interp groups. One extra node pack (ComfyUI-Crystools) + 2 extra models, manifest in
-BUILD_SPEC §10. Its checkpoint was repointed at the already-provisioned `photonLCM_v10.safetensors`
-(the original NSFW/Civitai checkpoint wasn't auto-fetchable — see BUILD_SPEC §10).
+upscale/interp groups. One extra node pack (ComfyUI-Crystools) + 3 extra models (incl. its
+checkpoint, `realismBYSTABLEYOGI_v4LCM.safetensors` — a verified HF substitute for the workflow's
+original NSFW/Civitai checkpoint), manifest in BUILD_SPEC §10.
 
 ## Live resources (as of 2026-06-18)
 - **GitHub:** `blwaisbren/runpod-ltx` (public) — push to `main` auto-builds via GitHub Actions.
@@ -165,3 +165,12 @@ BUILD_SPEC §10. Its checkpoint was repointed at the already-provisioned `photon
   step left. Updated BUILD_SPEC.md (§10), workflows/README.md, and this file.
   **Not yet pushed/deployed** — local repo changes only, pending user go-ahead to push (triggers
   GHCR rebuild) and redeploy a fresh pod to verify live.
+- **2026-06-30 (later):** Pushed (`3bc513b`) → GHCR build succeeded (~9 min) → user deployed a
+  fresh pod and confirmed `4morph-ad2.json` works. Follow-up: user asked for an actual "Realism by
+  Stable Yogi" checkpoint instead of the `photonLCM_v10` fallback ("photon is fine but realism is
+  peak"), specifically mentioning a v4 LCM variant. Found `realismBYSTABLEYOGI_v4LCM.safetensors`
+  on HF under **`moonshotmillion`** — the same uploader this repo already trusts for
+  `photonLCM_v10` — verified reachable + size (2.13 GB) via `curl -I` before adding. Added it to
+  provisioning.sh and repointed the bundled workflow's `CheckpointLoaderSimple` (node 564) at it,
+  same way as the `photonLCM_v10` swap. `photonLCM_v10` stays provisioned for `cool2`. Updated
+  BUILD_SPEC §10, workflows/README.md, this file. Pending: push + rebuild + redeploy.
